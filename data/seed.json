@@ -1,0 +1,81 @@
+{
+  "merchant": "Brindle Pantry Co.",
+  "catalog": [
+    {
+      "sku": "PB-340",
+      "name": "Brindle Creamy Peanut Butter 340g",
+      "unit_price_cents": 2400
+    },
+    {
+      "sku": "OL-500",
+      "name": "Olive Oil 500ml",
+      "unit_price_cents": 2200
+    },
+    {
+      "sku": "HN-250",
+      "name": "Wildflower Honey 250g",
+      "unit_price_cents": 1200
+    },
+    {
+      "sku": "TB-100",
+      "name": "Herbal Tea Box",
+      "unit_price_cents": 1600
+    }
+  ],
+  "orders": [
+    {
+      "id": "order-1",
+      "customer_name": "Asha Patel",
+      "customer_email": "asha@example.test",
+      "total_cents": 6800,
+      "lines": [
+        {
+          "sku": "PB-340",
+          "qty": 1,
+          "lot_number": "B-214"
+        },
+        {
+          "sku": "OL-500",
+          "qty": 2,
+          "lot_number": null
+        }
+      ]
+    },
+    {
+      "id": "order-2",
+      "customer_name": "Rohan Mehta",
+      "customer_email": "rohan@example.test",
+      "total_cents": 4800,
+      "lines": [
+        {
+          "sku": "PB-340",
+          "qty": 1,
+          "lot_number": "B-310"
+        },
+        {
+          "sku": "HN-250",
+          "qty": 2,
+          "lot_number": null
+        }
+      ]
+    },
+    {
+      "id": "order-3",
+      "customer_name": "Meera Shah",
+      "customer_email": "meera@example.test",
+      "total_cents": 4000,
+      "lines": [
+        {
+          "sku": "PB-340",
+          "qty": 1,
+          "lot_number": null
+        },
+        {
+          "sku": "TB-100",
+          "qty": 1,
+          "lot_number": null
+        }
+      ]
+    }
+  ]
+}

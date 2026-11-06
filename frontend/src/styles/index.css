@@ -1,0 +1,79 @@
+@import "./ui.css";
+@import "./workflow.css";
+@import "./home.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #1b1b1f;
+  background: #fcf8fe;
+  --focus: #0070e0;
+}
+body { min-width: 320px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+#main-content:focus { outline: none; }
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-size: 1.125rem;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  font-feature-settings: 'liga';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  flex: none;
+}
+.app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+.app-shell > main { flex: 1; min-width: 0; }
+.container-shell { max-width: 1328px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+.top-header { position: sticky; top: 0; z-index: 20; background: #fcf8fef5; backdrop-filter: blur(16px); box-shadow: 0 1px 8px #001d590a; }
+.nav-row { min-height: 68px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.wordmark { display: inline-flex; align-items: center; gap: 9px; font: 800 20px Outfit, sans-serif; color: #001d59; letter-spacing: -.03em; }
+.nav-pills { display: flex; gap: 2px; border-radius: 999px; padding: 4px; background: #f6f2f8; white-space: nowrap; }
+.nav-pills > * { padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #444652; }
+.nav-pills a:hover { background: #eae7ed; }
+.nav-pills a[aria-current] { background: #003087; color: white; }
+.nav-pills [aria-disabled] { color: #636574; }
+.nav-merchant { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 12px; font-weight: 700; }
+.avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #dbe1ff; color: #001d59; }
+.sandbox-tag { display: inline-flex; gap: 6px; align-items: center; padding: 6px 8px; border-radius: 999px; background: #e6f0fd; color: #003087; font-size: 10px; letter-spacing: .04em; }
+.sandbox-tag > span { width: 6px; height: 6px; border-radius: 50%; background: #005ab6; }
+.tracker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 8px; padding: 3px 0 12px; }
+.tracker-step { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tracker-step:not(:last-child)::after { content: ''; flex: 1; height: 2px; background: #e4e1e7; }
+.step-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; background: #f0edf3; color: #444652; font-size: 11px; font-weight: 700; }
+.step-pill .material-symbols-outlined { font-size: 14px; }
+.step-pill[aria-current] { background: #003087; color: white; }
+.site-footer { background: #f6f2f8; border-top: 1px solid #e4e1e7; font-size: 12px; color: #444652; }
+.footer-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-block: 20px; }
+.skip-link { position: fixed; z-index: 60; top: 8px; left: 8px; padding: 10px 16px; color: white; background: #003087; transform: translateY(-160%); }
+.skip-link:focus { transform: none; }
+@media (max-width: 900px) {
+  .merchant-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+@media (max-width: 720px) {
+  .nav-row { min-height: 0; flex-wrap: wrap; padding-block: 9px; gap: 8px; }
+  .nav-pills { order: 3; width: 100%; justify-content: space-between; }
+  .nav-pills > * { padding-inline: clamp(6px, 2vw, 14px); }
+  .tracker { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .tracker-step::after { display: none; }
+  .step-pill { width: 100%; min-height: 34px; padding: 4px; justify-content: center; text-align: center; line-height: 1.2; }
+  .step-pill .material-symbols-outlined { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+.skip-link:not(:focus) { clip-path: inset(50%); }
+html { scroll-padding-block: 126px 82px; }
+@media (max-width: 720px) {
+  html { scroll-padding-block: 150px 118px; }
+}

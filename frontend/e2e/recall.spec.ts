@@ -1,0 +1,92 @@
+import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+
+async function capture(page: Page, info: TestInfo, name: string) {
+  if (process.env.RECALLRELAY_SCREENSHOTS !== '1') return
+  await page.evaluate(async () => { await document.fonts.ready; window.scrollTo(0, 0) })
+  await page.screenshot({ path: info.outputPath(`${name}.png`), fullPage: !name.startsWith("confirmation") && !name.startsWith("activity"), animations: 'disabled' })
+}
+
+async function fitsMobile(page: Page) {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+}
+
+test('refunds only the affected line and repeat approval creates no duplicate', async ({ page }, info) => {
+  const errors: Error[] = []
+  page.on('pageerror', error => errors.push(error))
+  await page.setViewportSize({ width: 1440, height: 1000 })
+
+  await page.goto('/home')
+  await expect(page.getByRole('heading', { name: 'Refund the right customers. The right amount.' })).toBeVisible()
+  await capture(page, info, 'home-1440')
+  await page.getByRole('link', { name: 'View demo setup' }).click()
+  await expect(page.getByText('No demo orders yet')).toBeVisible()
+  await page.getByRole('button', { name: 'Seed demo orders' }).click()
+  for (const name of ['Asha Patel', 'Rohan Mehta', 'Meera Shah']) {
+    const card = page.locator('.order-card').filter({ has: page.getByRole('heading', { name }) })
+    await card.getByRole('button', { name: 'Approve in PayPal sandbox' }).click()
+    await expect(card.getByText('Captured', { exact: true })).toBeVisible()
+  }
+  await capture(page, info, 'setup-1440')
+  await page.getByRole('link', { name: 'Continue to upload notice' }).click()
+  const text = await readFile(new URL('../../data/sample-notices/notice-01.txt', import.meta.url), 'utf8')
+  await page.getByRole('textbox', { name: 'Notice text' }).fill(text)
+  await page.getByRole('button', { name: 'Extract with AI' }).click()
+  await expect(page.getByText('Extracting fields', { exact: true })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Product SKU' })).toHaveValue('PB-340')
+  await expect(page.getByRole('textbox', { name: 'First lot number' })).toHaveValue('200')
+  await expect(page.getByRole('textbox', { name: 'Last lot number' })).toHaveValue('250')
+  await expect(page.locator('mark.quote-verified').filter({ hasText: 'B-200 through B-250' })).toBeVisible()
+  await capture(page, info, 'evidence-1440')
+  await page.getByRole('button', { name: 'Continue to review' }).click()
+  await expect(page).toHaveURL(/\/review\/[^/]+$/)
+  await expect(page.getByText('$24.00 of $68.00')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Rohan Mehta' })).toBeVisible()
+  await expect(page.getByText('Needs manual review', { exact: true })).toBeVisible()
+  await capture(page, info, 'review-1440')
+  await fitsMobile(page)
+  await capture(page, info, 'review-390')
+  await page.getByRole('button', { name: 'Approve refunds' }).click()
+  let dialog = page.getByRole('dialog', { name: 'Approve sandbox refunds?' })
+  await expect(dialog.getByRole('button', { name: 'Approve and refund $24.00' })).toBeDisabled()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Approve refunds' })).toBeFocused()
+  await page.getByRole('button', { name: 'Approve refunds' }).click()
+  dialog = page.getByRole('dialog', { name: 'Approve sandbox refunds?' })
+  await dialog.getByRole('checkbox', { name: 'I understand this issues a sandbox refund' }).check()
+  await capture(page, info, 'confirmation-390')
+  await dialog.getByRole('button', { name: 'Approve and refund $24.00' }).click()
+
+  await expect(page.getByRole('heading', { name: '$24.00 refunded' })).toBeVisible()
+  await expect(page).toHaveURL(/\/result\/[^/]+$/)
+  const ledger = page.getByRole('table', { name: 'Refund ledger' })
+  const receipt = ledger.getByRole('row').filter({ hasText: 'Asha Patel' })
+  const refundId = await receipt.locator('.refund-id code').innerText()
+  expect(refundId).toMatch(/^7XK[A-F0-9]{14}$/)
+  await expect(receipt.getByText('Completed', { exact: true })).toBeVisible()
+  await expect(ledger.getByRole('row')).toHaveCount(2)
+  await expect(page.getByText('Rohan Mehta', { exact: true })).toBeVisible()
+  await expect(page.getByText('Meera Shah', { exact: true })).toBeVisible()
+  await expect(page.getByText('Needs manual review', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Approve again' }).click()
+  await expect(page.getByRole('status').getByText('Already refunded. No duplicate created.')).toBeVisible()
+  await expect(ledger.getByRole('row')).toHaveCount(2)
+  await expect(receipt.getByText(refundId, { exact: true })).toBeVisible()
+  await expect(page.getByText('Duplicate blocked', { exact: true })).toBeVisible()
+  await fitsMobile(page)
+  await capture(page, info, 'result-390')
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await capture(page, info, 'result-1440')
+
+  await page.reload()
+  await expect(receipt.getByText(refundId, { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Refund Result' })).toHaveAttribute('aria-current', 'page')
+  await page.getByRole('button', { name: 'View recall activity' }).click()
+  const activity = page.getByRole('dialog', { name: 'Recall activity' })
+  await expect(activity.getByText('Notice uploaded')).toBeVisible()
+  await expect(activity.getByText('Refund completed', { exact: true })).toBeVisible()
+  await capture(page, info, 'activity-1440')
+  expect(errors).toEqual([])
+})

@@ -1,0 +1,9 @@
+{
+  "name": "recallrelay",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "node -e \"console.log('Backend built separately. See docs/API_CONTRACT.md')\"",
+    "test": "npm --prefix frontend test"
+  }
+}
