@@ -6,7 +6,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(value)
-      toast(`${label} copied.`, 'success')
+      toast(`Copied ${label}.`, 'success')
     } catch {
       toast('Copy is unavailable. Select the ID to copy it manually.', 'warning')
     }

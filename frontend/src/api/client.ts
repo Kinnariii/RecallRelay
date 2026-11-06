@@ -4,14 +4,16 @@ import { responses } from './schemas'
 const messages: Record<string, string> = {
   NETWORK: 'The sandbox is unreachable. Check your connection and try again.',
   SERVER_WAKING: 'The sandbox is taking longer than expected to respond.',
-  INVALID_RESPONSE: 'The sandbox returned an unexpected response. Please try again.',
+  INVALID_RESPONSE: 'We couldn’t read the sandbox response. Try again.',
   NOT_FOUND: 'This recall or order could not be found. It may have been cleared when the demo was reset.',
   INVALID_INPUT: 'Check the highlighted fields and try again.',
   EXTRACTION_FAILED: 'We couldn’t read the recall details. Try again or paste the notice as plain text.',
   PLAN_BLOCKED: 'The refund plan needs attention before you can approve it.',
   RECALL_LOCKED: 'This recall has already been approved.',
-  REFUND_NOT_RETRYABLE: 'Only failed refunds can start a new attempt. Refresh the status first.',
-  REFUND_FAILED: 'The sandbox couldn’t complete this refund. You can retry it with a new attempt.',
+  REFUND_NOT_RETRYABLE: 'Refresh the status. Only a failed refund can be retried.',
+  REFUND_FAILED: 'The sandbox couldn’t complete this refund. Choose Retry refund to try again.',
+  RATE_LIMITED: 'There have been too many requests. Wait a moment, then try again.',
+  BODY_TOO_LARGE: 'This notice is too long. Paste a shorter section or upload a shorter file.',
   STORAGE: 'The demo couldn’t save its data in this browser. Check your site storage settings and try again.',
 }
 const defaultMessage = 'Something went wrong. Please try again.'

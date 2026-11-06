@@ -1,0 +1,22 @@
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --radius-xs: 4px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 9999px;
+  --shadow-low: 0 1px 2px #001d5908, 0 2px 8px #001d590d;
+  --shadow-mid: 0 4px 20px #001d5920;
+  --shadow-high: 0 24px 48px #001d5938;
+  --nav-height: 114px;
+  --tap: 44px;
+  --focus: #0070e0;
+}

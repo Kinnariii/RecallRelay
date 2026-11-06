@@ -8,7 +8,7 @@ export function IdempotencyTimeline({ rows, repeatIds }: { rows: RefundRow[]; re
   return (
     <Card className="stack">
       <div className="card-title"><span className="icon-tile"><Icon name="timeline" /></span><div>
-        <h2 className="heading-sm">Refund request timeline</h2><p className="muted text-sm">Follow each request from creation to its latest recorded state.</p>
+        <h2 className="heading-sm">Refund timeline</h2><p className="muted text-sm">See when the refund was requested and what happened next.</p>
       </div></div>
       {rows.map(row => <section key={row.id} className="request-history">
         <h3 className="heading-sm">{row.order_id} · Attempt {row.attempt}</h3>

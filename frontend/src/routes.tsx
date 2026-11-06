@@ -1,11 +1,13 @@
+import { lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
-import { Home } from './pages/Home'
-import { Setup } from './pages/Setup'
-import { Notice } from './pages/Notice'
-import { Review } from './pages/Review'
-import { Result } from './pages/Result'
-import { NotFound } from './pages/NotFound'
+
+const Home = lazy(() => import('./pages/Home').then(page => ({ default: page.Home })))
+const Setup = lazy(() => import('./pages/Setup').then(page => ({ default: page.Setup })))
+const Notice = lazy(() => import('./pages/Notice').then(page => ({ default: page.Notice })))
+const Review = lazy(() => import('./pages/Review').then(page => ({ default: page.Review })))
+const Result = lazy(() => import('./pages/Result').then(page => ({ default: page.Result })))
+const NotFound = lazy(() => import('./pages/NotFound').then(page => ({ default: page.NotFound })))
 
 export function AppRoutes() {
   return (

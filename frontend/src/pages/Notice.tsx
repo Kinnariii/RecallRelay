@@ -6,27 +6,33 @@ import type { Recall, RecallEdits } from '../api/schemas'
 import { EvidenceHighlight } from '../components/domain/EvidenceHighlight'
 import { ExtractionForm } from '../components/domain/ExtractionForm'
 import { SampleNoticePicker } from '../components/domain/SampleNoticePicker'
+import { DemoCoach } from '../components/layout/DemoCoach'
 import { AsyncFailure } from '../components/ui/AsyncFailure'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Icon } from '../components/ui/Icon'
+import { SectionHeader } from '../components/ui/SectionHeader'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useToast } from '../components/ui/ToastProvider'
 import { useRecall } from '../hooks/useRecall'
 import { samples } from '../lib/sampleNotices'
 
 const aiSteps = [
-  ['Find the product SKU', 'Identify the product mentioned in the supplier notice.'],
-  ['Read the affected lots', 'Find the range or list of lots named in the notice.'],
-  ['Quote the evidence', 'Check that the supporting quotes appear in the original notice.'],
+  ['Find the product code', 'Read the SKU named by the supplier.'],
+  ['Find the affected lots', 'Read the range or list of lot numbers.'],
+  ['Show the supporting quotes', 'Point to the words in the original notice.'],
 ]
+const noticeLimit = 20_000
 
 export function Notice() {
   const [text, setText] = useState('')
   const [sample, setSample] = useState('')
+  const tooLong = text.length > noticeLimit
   const [recall, setRecall] = useState<Recall>()
-  const [active, setActive] = useState<number | null>(null)
+  const [hovered, setHovered] = useState<number | null>(null)
+  const [focused, setFocused] = useState<number | null>(null)
+  const evidenceState = { active: hovered ?? focused, onHover: setHovered, onFocus: setFocused }
   const [busy, setBusy] = useState<'file' | 'extract' | 'save' | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [fileError, setFileError] = useState('')
@@ -40,7 +46,7 @@ export function Notice() {
 
   function pickSample(index: string) {
     setSample(index)
-    setText(index ? samples[Number(index)].text : '')
+    if (index) setText(samples[Number(index)].text)
     setError(null)
     setFileError('')
   }
@@ -60,6 +66,10 @@ export function Notice() {
         setFileError('This text file is empty. Choose another file or paste a notice.')
         return
       }
+      if (contents.length > noticeLimit) {
+        setFileError('This notice is longer than 20,000 characters. Upload a shorter file or paste the relevant section.')
+        return
+      }
       setSample('')
       setText(contents)
       setError(null)
@@ -72,7 +82,7 @@ export function Notice() {
   }
 
   async function extract() {
-    if (!text.trim() || busy) return
+    if (!text.trim() || tooLong || busy) return
     const uploaded = new Date().toISOString()
     setBusy('extract')
     setError(null)
@@ -118,86 +128,89 @@ export function Notice() {
     ? 'Lots ' + recall.lot_prefix + recall.lot_start + ' to ' + recall.lot_prefix + recall.lot_end
     : recall.extraction.extra_lots.join(', ')].filter(Boolean).join(' · ')
   return (
-    <section className="container-shell page">
-      <header className="page-header">
-        <p className="eyebrow">Step 02 / Supplier notice</p>
-        <h1 ref={heading} tabIndex={-1} className="heading-lg">{recall ? 'Verify recall notice extraction' : extracting ? 'Extracting recall details…' : 'Upload the supplier recall notice'}</h1>
-        <p className="muted">{recall ? 'Check the evidence and correct the SKU or lot details before reviewing refunds.' : 'Paste a notice, upload a plain text file, or choose a sample to try the demo.'}</p>
-      </header>
-      {error != null && <div className="mb-5">
+    <section className="container-shell page notice-page">
+      <SectionHeader eyebrow="Step 2 · Supplier notice" headingRef={heading}
+        title={recall ? 'Check the product and lots' : 'Upload the supplier recall notice'}
+        description={recall ? 'Compare the extracted details with the numbered quotes.' : 'Try the sample, paste your notice, or upload a text file.'} />
+      <DemoCoach hint={recall ? 'Check the highlighted quotes against the product and lot details before reviewing orders.' : 'Use the sample or paste a notice so AI can find the recalled product and lots.'}
+        action={recall ? 'Find next step' : text.trim() && !tooLong ? 'Find extraction' : 'Find the sample'}
+        targets={busy ? [] : recall ? ['continue-extraction', 'save-extraction', 'extracted-details'] : [text.trim() && !tooLong ? 'extract-notice' : 'sample-notice-1']} />
+      {error != null && <div className="mb-4">
         {extractionError ? <div className="stack">
-          <ErrorState error={error} title="We couldn’t extract the recall details" retry={() => void extract()} />
-          <Button variant="secondary" icon="edit" onClick={pasteRaw}>Paste raw text</Button>
+          <ErrorState error={error} title="We couldn’t read this notice" retry={() => void extract()} />
+          <Button variant="secondary" icon="edit" onClick={pasteRaw}>Edit notice text</Button>
         </div> : <AsyncFailure error={error} retry={recall ? undefined : () => void extract()}
           onReady={isWaking(error) ? () => setError(null) : undefined} />}
       </div>}
       {recall ? (
         <div className="split-layout">
           <div className="stack">
-            <EvidenceHighlight notice={recall.notice_text} evidence={recall.extraction.evidence} active={active} setActive={setActive} />
-            <Button variant="ghost" icon="arrow_back" disabled={Boolean(busy)} onClick={() => { setRecall(undefined); setError(null); setActive(null) }}>Back to notice text</Button>
+            <EvidenceHighlight notice={recall.notice_text} evidence={recall.extraction.evidence} {...evidenceState} />
+            <div className="row">
+              <Button variant="ghost" icon="arrow_back" disabled={Boolean(busy)} onClick={() => {
+                setRecall(undefined); setError(null); setHovered(null); setFocused(null)
+                requestAnimationFrame(() => heading.current?.focus())
+              }}>Edit notice text</Button>
+              <Button className="jump-to-fields" variant="secondary" icon="arrow_downward"
+                onClick={() => document.getElementById('extracted-details')?.focus()}>Go to extracted details</Button>
+            </div>
           </div>
-          <ExtractionForm key={recall.id} recall={recall} active={active} setActive={setActive} busy={busy === 'save'}
+          <ExtractionForm key={recall.id} recall={recall} {...evidenceState} busy={busy === 'save'}
             onSave={edits => void save(edits)} onContinue={() => navigate(`/review/${encodeURIComponent(recall.id)}`, { state: { scope } })} />
         </div>
       ) : (
         <div className="split-layout">
-          <div className="stack">
-            <Card>
-              <div className={`dropzone ${dragging ? 'dropzone-active' : ''}`}
-                onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true) }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={event => { event.preventDefault(); void openFile(event.dataTransfer.files[0]) }}>
-                <span className="icon-tile"><Icon name="cloud_upload" /></span>
-                <h2 className="heading-sm">Drop a .txt supplier recall notice</h2>
-                <p className="muted text-sm">Choose a plain text file from your device.</p>
-                <input type="file" hidden ref={fileInput} accept=".txt,text/plain" onChange={event => {
-                  const file = event.target.files?.[0]
-                  event.target.value = ''
-                  void openFile(file)
-                }} />
-                <Button variant="secondary" icon="attach_file" busy={busy === 'file'} disabled={Boolean(busy)} onClick={() => fileInput.current?.click()}>Browse files</Button>
-                {fileError && <p className="field-error" role="alert">{fileError}</p>}
-              </div>
-            </Card>
-            <Card className="stack">
-              <SampleNoticePicker value={sample} onSelect={pickSample} disabled={Boolean(busy)} />
-              <div className="editor">
-                <div className="row between">
-                  <label htmlFor="notice-text" className="eyebrow">Notice text</label>
-                  <Button variant="ghost" icon="backspace" disabled={!text || Boolean(busy)} onClick={() => {
-                    setText(''); setError(null); setFileError(''); editor.current?.focus()
+          <Card className="stack notice-editor-card">
+            <div className="sample-shortcut">
+              <div className="card-title"><span className="icon-tile"><Icon name="description" /></span><div>
+                <h2 className="heading-sm">Try a sample recall</h2>
+                <p className="muted text-sm">Start with a notice that matches the demo orders.</p>
+              </div></div>
+              <Button id="sample-notice-1" variant={text.trim() ? 'secondary' : 'primary'} icon="description" disabled={Boolean(busy)}
+                onClick={() => { pickSample('0'); requestAnimationFrame(() => document.getElementById('extract-notice')?.focus()) }}>Use sample notice 1</Button>
+            </div>
+            <div className="editor"
+              onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={event => { event.preventDefault(); void openFile(event.dataTransfer.files[0]) }}>
+              <div className="row between">
+                <label htmlFor="notice-text" className="field">Notice text</label>
+                <div className="row editor-tools">
+                  <input type="file" hidden ref={fileInput} accept=".txt,text/plain" onChange={event => {
+                    const file = event.target.files?.[0]
+                    event.target.value = ''
+                    void openFile(file)
+                  }} />
+                  <Button variant="ghost" icon="attach_file" busy={busy === 'file'} disabled={Boolean(busy)} onClick={() => fileInput.current?.click()}>Upload .txt</Button>
+                  <Button variant="ghost" disabled={!text || Boolean(busy)} onClick={() => {
+                    setText(''); setSample(''); setError(null); setFileError(''); editor.current?.focus()
                   }}>Clear</Button>
                 </div>
-                <textarea id="notice-text" ref={editor} value={text} readOnly={Boolean(busy)} rows={10}
-                  placeholder="Paste the supplier’s recall notice here…"
-                  onChange={event => { setText(event.target.value); setError(null) }} />
               </div>
-              <div className="row between">
-                <p className="muted text-xs amount">{text.length.toLocaleString()} characters · {text ? text.split(/\r\n|\r|\n/).length : 0} lines</p>
-                <div className="row">
-                  <Button variant="secondary" disabled={Boolean(busy)} onClick={() => pickSample(sample || '0')}>Reset Sample</Button>
-                  <Button icon="auto_awesome" busy={extracting} disabled={!text.trim() || Boolean(busy)} onClick={() => void extract()}>
-                    {extracting ? 'Extracting…' : 'Extract with AI'}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
+              <textarea id="notice-text" ref={editor} value={text} readOnly={Boolean(busy)} rows={8}
+                aria-invalid={tooLong || undefined} aria-describedby={tooLong ? 'notice-length-error' : undefined}
+                className={dragging ? 'dropzone-active' : undefined}
+                placeholder="Paste the supplier’s recall notice here…"
+                onChange={event => { setText(event.target.value); setError(null) }} />
+              {fileError && <p className="field-error" role="alert">{fileError}</p>}
+              {tooLong && <p className="field-error" id="notice-length-error">This notice is longer than 20,000 characters. Paste the relevant section before extracting.</p>}
+            </div>
+            <div className="row between notice-extract-actions">
+              <p className="muted text-sm amount">{text.length.toLocaleString()} of 20,000 characters</p>
+              <Button id="extract-notice" variant={text.trim() && !tooLong && !error ? 'primary' : 'secondary'} icon="auto_awesome" busy={extracting}
+                disabled={!text.trim() || tooLong || Boolean(busy)} onClick={() => void extract()}>{extracting ? 'Reading notice…' : 'Extract with AI'}</Button>
+            </div>
+            <div className="extraction-live" aria-live="polite">
+              {extracting && <p className="notice-banner tone-pending"><Icon name="schedule" /><span>Reading the notice and checking quotes…</span></p>}
+            </div>
+            <SampleNoticePicker value={sample} onSelect={pickSample} disabled={Boolean(busy)} />
+          </Card>
           <aside className="stack">
-            {extracting ? <Card className="stack" aria-live="polite">
-              <div className="card-title"><span className="icon-tile"><Icon name="auto_awesome" /></span><h2 className="heading-sm">Extraction progress</h2></div>
-              <ol className="ai-list">
-                <li><Icon name="check_circle" /><div><strong>Reading notice</strong><p>Notice text is ready.</p></div></li>
-                <li aria-current="step"><Icon name="progress_activity" className="spin" /><div><strong>Extracting fields</strong><p>Waiting for the extraction response.</p></div></li>
-                <li><Icon name="radio_button_unchecked" /><div><strong>Verifying evidence</strong><p>Verification results come with the extracted fields.</p></div></li>
-              </ol>
-              <Skeleton label="Waiting for extracted fields…" rows={3} />
-            </Card> : <Card className="stack">
+            {extracting ? <Skeleton label="Waiting for product and lot details…" variant="fields" /> : <Card className="stack">
               <div className="card-title"><span className="icon-tile"><Icon name="psychology" /></span><h2 className="heading-sm">What AI will do</h2></div>
               <ul className="ai-list">{aiSteps.map(([title, detail]) => <li key={title}><Icon name="check_circle" /><div><strong>{title}</strong><p>{detail}</p></div></li>)}</ul>
             </Card>}
-            <div className="notice-banner tone-pending"><Icon name="info" /><div><strong>AI extracts only</strong><p>The refund plan uses captured order lines. You review and approve the amount before refunds are issued.</p></div></div>
+            <div className="notice-banner tone-pending"><Icon name="info" /><div><strong>You decide what to refund</strong><p>AI reads the notice. The order data determines the amount, and you approve it.</p></div></div>
           </aside>
         </div>
       )}

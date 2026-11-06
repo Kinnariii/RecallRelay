@@ -32,8 +32,8 @@ export function ServerWaking({ onReady }: { onReady?: () => void }) {
     <Card className="waking-state" aria-live="polite">
       <span className="icon-tile"><Icon name={state === 'ready' ? 'check_circle' : 'cloud_sync'} /></span>
       <div className="stack">
-        <h2 className="heading-md">{state === 'ready' ? 'Sandbox connected' : 'Waking up the sandbox server…'}</h2>
-        <p className="muted">{state === 'ready' ? 'You can try the action again.' : 'We’ll check the connection again automatically.'}</p>
+        <h2 className="heading-md">{state === 'ready' ? 'Sandbox connected' : 'Reconnecting to the sandbox…'}</h2>
+        <p className="muted">{state === 'ready' ? 'Try the action again.' : 'We’ll check the connection again in a moment.'}</p>
         {state !== 'ready' && <ProgressBar label={state === 'checking' ? 'Checking sandbox connection' : 'Waiting to check sandbox connection'} />}
         {state !== 'ready' && <Button variant="secondary" icon="refresh" busy={state === 'checking'} onClick={() => void check()}>Check connection now</Button>}
       </div>

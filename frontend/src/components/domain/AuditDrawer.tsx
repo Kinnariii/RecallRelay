@@ -7,7 +7,7 @@ import { Modal } from '../ui/Modal'
 
 const eventTypes: Record<RecallEventKind, [string, string]> = {
   upload: ['Notice uploaded', 'upload_file'], extract: ['AI extracted fields', 'auto_awesome'],
-  edit: ['Merchant edits saved', 'edit'], plan: ['Plan computed', 'fact_check'],
+  edit: ['Edits saved', 'edit'], plan: ['Refund plan ready', 'fact_check'],
   approve: ['Refunds approved', 'verified'],
 }
 
@@ -16,13 +16,13 @@ export function AuditDrawer({ events, refunds, onClose }: { events: RecallEvent[
     ...events.map(({ kind, detail, at }) => ({ at, detail, title: eventTypes[kind][0], icon: eventTypes[kind][1] })),
     ...refunds.map(row => ({
       at: row.updated_at, title: `Refund ${status[row.status].label.toLowerCase()}`, icon: status[row.status].icon,
-      detail: [row.order_id, row.paypal_refund_id, row.paypal_request_id].filter(Boolean).join(' · '),
+      detail: row.paypal_refund_id ? `Refund ID ${row.paypal_refund_id}` : `Order ${row.order_id}`,
     })),
   ].sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
 
   return (
     <Modal title="Recall activity" onClose={onClose} drawer>
-      <p className="muted text-sm">This timeline combines activity observed in this browser with refund records from the sandbox.</p>
+      <p className="muted text-sm">See the steps taken in this browser and the latest refund status.</p>
       {!timeline.length ? <p className="muted mt-5">No activity recorded yet.</p> : <ol className="audit-timeline">
         {timeline.map(({ at, title, detail, icon }, index) => <li key={`${at}-${index}`}>
           <span className="icon-tile"><Icon name={icon} /></span>

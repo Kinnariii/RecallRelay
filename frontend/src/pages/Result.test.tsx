@@ -18,7 +18,7 @@ vi.mock('../api', () => ({ api: { plan: async () => ({ plan }), refunds: async (
 
 it('shows the refund ID and completed status from the API', async () => {
   render(<MemoryRouter initialEntries={['/result/recall-test']}><Routes><Route path="/result/:recallId" element={<Result />} /></Routes></MemoryRouter>)
-  const table = await screen.findByRole('table', { name: 'Refund ledger' })
+  const table = await screen.findByRole('table', { name: 'Refund details' })
   expect(within(table).getByText('7XK12345AB678901C')).toBeTruthy()
   expect(within(table).getByText('Completed')).toBeTruthy()
   expect(screen.getByRole('heading', { name: '$24.00 refunded' })).toBeTruthy()

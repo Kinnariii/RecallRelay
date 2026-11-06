@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
 import type { Order, PlannedOrder } from '../../api/schemas'
-import { formatCents } from '../../lib/money'
 import { Badge } from '../ui/Badge'
-import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
+import { Chip } from '../ui/Chip'
 import { CopyButton } from '../ui/CopyButton'
 import { Icon } from '../ui/Icon'
+import { Money } from '../ui/Money'
 import { ProgressBar } from '../ui/ProgressBar'
 import { StatusBadge } from '../ui/StatusBadge'
 
@@ -19,13 +19,13 @@ export function OrderCard({ order, action }: { order: Order; action?: ReactNode 
           <p className="muted break-words text-sm">{order.customer_email} · {order.id}</p>
         </div>
         <StatusBadge value={order.status} />
-        <div className="order-total"><span className="eyebrow">Basket total</span><strong className="amount">{formatCents(order.total_cents)}</strong></div>
+        <div className="order-total"><span className="eyebrow">Order total</span><Money cents={order.total_cents} /></div>
       </div>
       <ul className="order-lines" aria-label="Order line items">
         {order.lines.map(line => <li key={line.id}>
           <div><strong>{line.name}</strong><span className="line-meta">{line.sku} · Qty {line.qty}</span></div>
-          {line.lot_number ? <Badge>{line.lot_number}</Badge> : <Badge tone="uncertain" icon="warning">No lot recorded</Badge>}
-          <span className="amount line-price">{formatCents(line.unit_price_cents)} each</span>
+          {line.lot_number ? <Chip>{line.lot_number}</Chip> : <Chip>No lot recorded</Chip>}
+          <span className="line-price"><Money cents={line.unit_price_cents} /> each</span>
         </li>)}
       </ul>
       <div className="row between order-card-foot">
@@ -51,23 +51,25 @@ export function PlannedOrderCard({ order }: { order: PlannedOrder }) {
           <p className="muted break-words text-sm">{order.customer_email} · {order.order_id}</p>
         </div>
         <StatusBadge value={order.bucket} />
-        <div className="order-total"><span className="eyebrow">Basket total</span><strong className="amount">{formatCents(order.total_cents)}</strong></div>
+        <div className="order-total"><span className="eyebrow">Order total</span><Money cents={order.total_cents} /></div>
       </div>
       <p className="plan-reason">{order.reason}</p>
       <ul className="order-lines" aria-label="Planned order line items">
         {order.lines.map((line, index) => <li key={`${line.sku}-${index}`} className={`line--${line.classification}`}>
           <div><strong>{line.name}</strong><span className="line-meta">{line.sku} · Qty {line.qty}</span></div>
-          {line.lot_number ? <Badge>{line.lot_number}</Badge> : line.classification === 'uncertain' && <Badge tone="uncertain" icon="warning">No lot recorded</Badge>}
-          {line.classification === 'affected' && <Badge tone="confirmed" icon="check_circle">Affected</Badge>}
-          <strong className="amount line-price">{formatCents(line.line_total_cents)}</strong>
+          {line.lot_number ? <Chip>{line.lot_number}</Chip> : line.classification === 'uncertain' && <Badge tone="uncertain" icon="warning">No lot recorded</Badge>}
+          {line.classification === 'affected' && <Badge tone="confirmed" icon="check_circle">Affected item</Badge>}
+          {confirmed && (line.classification === 'not_applicable' || line.classification === 'unaffected') &&
+            <Badge tone="unaffected" icon="remove_circle_outline">Kept</Badge>}
+          <Money className="line-price" cents={line.line_total_cents} tone={line.classification === 'affected' ? 'refund' : 'retained'} />
         </li>)}
       </ul>
       {confirmed ? <div className="refund-allocation">
-        <div className="row between text-sm"><span>Refund amount</span><strong className="amount">{formatCents(order.refund_cents)} of {formatCents(order.total_cents)}</strong></div>
+        <div className="row between text-sm"><span>Refund amount</span><Money cents={order.refund_cents} of={order.total_cents} tone="refund" /></div>
         <ProgressBar label="Refund share of basket" value={order.total_cents ? order.refund_cents / order.total_cents * 100 : 0} />
       </div> : order.bucket === 'uncertain' ? <div className="row between order-card-foot">
         <Badge tone="uncertain" icon="warning">Needs manual review</Badge>
-        <Button variant="secondary" disabled>Review manually</Button>
+        <p className="muted text-sm">Not refunded automatically.</p>
       </div> : null}
     </Card>
   )

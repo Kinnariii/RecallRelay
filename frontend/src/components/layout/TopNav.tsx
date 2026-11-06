@@ -1,7 +1,10 @@
 import { Link, NavLink } from 'react-router-dom'
 import { ProgressTracker } from './ProgressTracker'
+import { Button } from '../ui/Button'
+import { useDemoGuide } from './DemoCoach'
 
 export function TopNav({ latestResult }: { latestResult?: string | null }) {
+  const guide = useDemoGuide()
   return (
     <header className="top-header">
       <div className="container-shell">
@@ -20,6 +23,7 @@ export function TopNav({ latestResult }: { latestResult?: string | null }) {
             {latestResult ? <NavLink to={`/result/${encodeURIComponent(latestResult)}`}>Refund Result</NavLink> : <span aria-disabled="true">Refund Result</span>}
           </nav>
           <div className="nav-merchant">
+            <Button id="demo-guide-toggle" className="guide-toggle" variant="ghost" aria-pressed={guide.enabled} onClick={guide.toggle}>Demo guide</Button>
             <span className="sandbox-tag"><span />SANDBOX MODE</span>
             <span className="avatar" title="Demo Merchant" aria-hidden="true">DM</span>
             <span className="merchant-name">Demo Merchant</span>

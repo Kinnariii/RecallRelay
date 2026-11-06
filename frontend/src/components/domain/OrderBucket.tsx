@@ -1,26 +1,26 @@
 import type { PlannedOrder } from '../../api/schemas'
 import { status } from '../../lib/status'
-import { Badge } from '../ui/Badge'
+import { Chip } from '../ui/Chip'
 import { Icon } from '../ui/Icon'
 import { PlannedOrderCard } from './OrderCard'
 
 type Bucket = PlannedOrder['bucket']
 const headings: Record<Bucket, string> = {
-  confirmed: 'Confirmed for partial refund', uncertain: 'Uncertain / Needs manual review',
+  confirmed: 'Confirmed for refund', uncertain: 'Uncertain orders',
   unaffected: 'Unaffected orders', excluded: 'Excluded orders',
 }
 const descriptions: Record<Bucket, string> = {
-  confirmed: 'These captured orders contain at least one affected line.',
-  uncertain: 'These orders need a lot check before any refund can be considered.',
+  confirmed: 'Refund the affected items in these orders.',
+  uncertain: 'Check these lot numbers before deciding.',
   unaffected: 'These orders will stay untouched.',
-  excluded: 'These orders have no eligible captured payment.',
+  excluded: 'These orders have no completed payment.',
 }
 
 export function OrderBucket({ bucket, orders }: { bucket: Bucket; orders: PlannedOrder[] }) {
   const { tone, icon, label } = status[bucket]
   const heading = <><span className={`icon-tile tone-${tone}`}><Icon name={icon} /></span>
     <span className="bucket-title"><span className="heading-sm">{headings[bucket]}</span><span className="muted text-sm">{descriptions[bucket]}</span></span>
-    <Badge tone={tone}>{orders.length} {label.toLowerCase()}</Badge></>
+    <Chip>{orders.length} {label.toLowerCase()}</Chip></>
   const content = <div className="stack bucket-content">
     {orders.length ? orders.map(order => <PlannedOrderCard key={order.order_id} order={order} />) : <p className="bucket-empty muted">No {label.toLowerCase()} orders.</p>}
   </div>

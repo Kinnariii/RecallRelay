@@ -116,3 +116,59 @@
 
 - Ran the existing frontend in HTTP mode against the Express backend. The browser exercised seed, all three approval returns, extraction, edit, the $24.00 receipt, repeat approval, and reset. Sandbox and model transport fixtures supplied deterministic upstream responses.
 - The live acceptance run requires sandbox app credentials, a sandbox buyer, and an AI key with model access. No credentials are included in the repository.
+
+# Frontend UX polish
+
+## 1. Baseline audit
+
+- Audited every route and the extraction, approval, pending, failed, activity, and reconnecting states at 1440, 1024, and 390 pixels. Used local HTTP fixtures for states the mock transport does not produce.
+- Use the original Stitch references for layout and colors. Apply the spec to content, payment rules, and the order outcomes.
+
+## 2. Shared design system
+
+- Use one CSS spacing, radius, and elevation scale across screens, preserving the Stitch palette and Outfit and Inter roles. Keep 24 to 32 px card corners and 44 px controls.
+- Use SectionHeader, Stat, Money, and Chip with the existing Card, Button, Badge, and StatusBadge. Money formats passed-in cents and distinguishes refunds from retained amounts.
+- Keep neutral lot chips separate from semantic badges. Status labels and icons stay paired.
+
+## 3. Workflow hierarchy
+
+- The first order returned by the demo API is the refundable order in both adapters. Continue unlocks after that capture. Setup still encourages approving all three orders so the demo shows every outcome.
+- Real buyer approval opens in a separate tab. Mock approval stays in the current page. Return focus refreshes real orders.
+- Use a featured sample shortcut before the editor. Keep file upload and all sample variants. Limit pasted and uploaded text to the existing 20,000-character backend constraint.
+- Separate blocking edits from quotes to check. Preserve the original text and give unmatched quotes a keyboard target.
+- Put the review sentence and amount together. Keep the receipt tied to API amounts. Place repeat approval beside the completed result and keep a separate primary retry action for failed refunds.
+- Use a compact review sheet on phones with scroll space for the last order. Keep the result actions in the page flow. Toasts move to the top on phones, stack to three, and expire independently after five seconds.
+
+## 4. Demo guide
+
+- Enable the guide by default on a first visit. Persist explicit choices in browser storage. A URL with demo=0 starts with the guide hidden for that visit.
+- The coach sits in reserved space at the bottom left on wide screens and within the page on narrower screens so it cannot sit over an approval or refund action.
+- The coach reveals and focuses the next control. It never submits the action itself. Its review receipt uses current API values.
+
+## 5. Copy
+
+- The Home action takes first-time users to Setup. A secondary notice link stays available for merchants with prepared orders.
+- Use short sentences and action verbs. Keep SKU, lot number, refund ID, and request ID where they are needed to check the receipt.
+- Keep the supplied API error and status codes. Map them to actionable language in the UI.
+
+## 6. Accessibility and responsive behavior
+
+- Retain the native modal, add aria-modal, and focus Cancel for refund approval and reset. Restore focus when the opener is still present.
+- Make mobile actions at least 44 px and move the mobile header into the page flow. Keep the approval sheet sticky with scroll space for the content below.
+- Use the axe Playwright integration as a development dependency. Scan the flow at all three widths. Lighten the page transition so contrast remains stable while entering.
+- Keep the refund table’s scoped headers when the rows stack on phones. Use a labeled checkbox and live regions for progress and notifications.
+
+## 7. Performance and sharing
+
+- Split routes into separate chunks with a reserved loading panel. Set a tab title for each route.
+- Preload local Latin Inter and Outfit fonts. Serve a subset of Material Symbols and include the asset licenses. Other characters use the font fallback.
+- Use the original RecallRelay mark for the favicon and a static branded share card. Set VITE_PUBLIC_URL at build time to give deployed shares an absolute Open Graph image URL.
+- Skip optional dark mode to keep the polish focused on the light recording theme.
+
+## 8. Recording verification
+
+- The final screenshot comparison showed that the original sticky approval bar could obscure an order while scrolling. Review now reserves a separate bottom row for the approval bar and scrolls the orders in a labeled region above it. The global footer is omitted on Review to preserve that viewport layout.
+- Capture the first screen and lower order outcomes separately for Review. Hide transient notifications in the other captures and keep the repeat-approval toast in its own capture.
+
+- Reject overlong notice submissions with an inline explanation while keeping the pasted text visible. This avoids losing any of the supplier’s words. Darken input placeholders for readability.
+- Keep the refund table directly below the result summary on phones. The inline guide follows the table.

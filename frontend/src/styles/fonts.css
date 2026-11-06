@@ -1,0 +1,23 @@
+@font-face {
+  font-family: Inter;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Outfit;
+  src: url('/fonts/outfit-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  src: url('/fonts/material-symbols.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}

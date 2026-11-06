@@ -3,7 +3,9 @@ import type { Recall, RecallEdits } from '../../api/schemas'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
+import { Chip } from '../ui/Chip'
 import { Icon } from '../ui/Icon'
+import type { EvidenceState } from './EvidenceHighlight'
 
 function inputsFor(recall: Recall) {
   return {
@@ -24,15 +26,19 @@ const fields = [
   { key: 'lot_end', label: 'Last lot number', evidence: ['lot_end'] },
 ] as const
 
-export function ExtractionForm({ recall, active, setActive, busy, onSave, onContinue }: {
-  recall: Recall; active: number | null; setActive: (index: number | null) => void; busy: boolean;
+export function ExtractionForm({ recall, active, onHover, onFocus, busy, onSave, onContinue }: {
+  recall: Recall; busy: boolean;
   onSave: (edits: RecallEdits) => void; onContinue: () => void
-}) {
+} & EvidenceState) {
   const [inputs, setInputs] = useState(() => inputsFor(recall))
   const [submitted, setSubmitted] = useState(false)
   const initial = inputsFor(recall)
   const dirty = fields.some(({ key }) => inputs[key].trim() !== initial[key])
   const { extra_lots: lots, evidence, confidence } = recall.extraction
+  const incomplete = !hasCompleteLots(recall)
+  const blocked = !recall.catalog_match || incomplete
+  const unverified = evidence.some(item => !item.verified)
+  const ambiguities = recall.extraction.ambiguities
   const sku = inputs.sku.trim()
   const prefix = inputs.lot_prefix.trim() || null
   const first = inputs.lot_start.trim()
@@ -52,8 +58,8 @@ export function ExtractionForm({ recall, active, setActive, busy, onSave, onCont
   function chips(names: readonly string[]) {
     return evidence.flatMap(({ field, verified }, index) => names.includes(field) ? [
       <button type="button" className={`evidence-chip ${verified ? '' : 'evidence-chip--unverified'} ${active === index ? 'evidence-chip--active' : ''}`}
-        key={index} id={`evidence-chip-${index}`} onFocus={() => setActive(index)} onBlur={() => setActive(null)}
-        onMouseEnter={() => setActive(index)} onMouseLeave={() => setActive(null)}
+        key={index} id={`evidence-chip-${index}`} onFocus={() => onFocus(index)} onBlur={() => onFocus(null)}
+        onMouseEnter={() => onHover(index)} onMouseLeave={() => onHover(null)}
         onClick={() => document.getElementById(`quote-${index}`)?.focus()}>
         <Icon name={verified ? 'check_circle' : 'warning'} /> {verified ? 'Verified in notice' : 'Unverified quote'} · {index + 1}
       </button>,
@@ -76,9 +82,22 @@ export function ExtractionForm({ recall, active, setActive, busy, onSave, onCont
   return (
     <Card className="stack">
       <div className="row between">
-        <h2 className="heading-sm">Extracted recall details</h2>
-        <Badge tone={confidence === 'high' ? 'confirmed' : 'uncertain'} icon={confidence === 'high' ? 'check_circle' : 'warning'}>Confidence · {confidence}</Badge>
+        <h2 className="heading-sm" id="extracted-details" tabIndex={-1}>Extracted details</h2>
+        <Badge tone={confidence === 'high' ? 'confirmed' : 'uncertain'} icon={confidence === 'high' ? 'check_circle' : 'warning'}>AI confidence · {confidence}</Badge>
       </div>
+      {blocked && <div className="notice-banner tone-failed" role="alert">
+        <Icon name="error" /><div><strong>Fix before continuing</strong>
+          {!recall.catalog_match && <p>The product code isn’t in your catalog. Enter a matching SKU and save.</p>}
+          {incomplete && <p>The lot range is incomplete. Check the supplier’s notice, then add and save the missing details.</p>}
+        </div>
+      </div>}
+      {(unverified || ambiguities.length > 0) && <div className="notice-banner tone-uncertain">
+        <Icon name="warning" /><div><strong>Check against the notice</strong>
+          {unverified && <p>This quote was not found in the notice. Please check it.</p>}
+          {ambiguities.map((ambiguity, index) => <p key={index}>{ambiguity}</p>)}
+          <p>Check with the supplier if any detail is unclear.</p>
+        </div>
+      </div>}
       <form className="stack" onSubmit={event => {
         event.preventDefault()
         setSubmitted(true)
@@ -88,18 +107,13 @@ export function ExtractionForm({ recall, active, setActive, busy, onSave, onCont
         <label className="field">Product from catalog
           <input className="input" readOnly value={recall.catalog_match?.name ?? ''} placeholder="No catalog match" />
         </label>
-        {recall.catalog_match ? <Badge tone="confirmed" icon="check_circle">Catalog match · {recall.catalog_match.sku}</Badge>
-          : <div className="notice-banner tone-failed" role="alert"><Icon name="error" /><div><strong>SKU not found in the catalog</strong><p>Enter a catalog SKU and save your edit before continuing.</p></div></div>}
-        {!hasCompleteLots(recall) && <div className="notice-banner tone-uncertain"><Icon name="warning" /><div><strong>Incomplete lot range</strong><p>Verify the missing prefix or lot bounds with the supplier, then enter them here.</p></div></div>}
+        {recall.catalog_match && <Badge tone="confirmed" icon="check_circle">Found in catalog · {recall.catalog_match.sku}</Badge>}
         <div className="lot-fields">{fields.slice(1).map(field)}</div>
-        {lots.length > 0 && <div className="field"><span>Listed lots</span><div className="row">{lots.map(lot => <Badge key={lot}>{lot}</Badge>)}</div>{chips(['extra_lots'])}</div>}
-        {recall.extraction.ambiguities.length > 0 && <div className="notice-banner tone-uncertain">
-          <Icon name="warning" /><div><strong>Details to verify</strong><ul className="list-disc space-y-1 pl-4 pt-1">{recall.extraction.ambiguities.map((ambiguity, index) => <li key={index}>{ambiguity}</li>)}</ul>{chips(['batch_date'])}</div>
-        </div>}
-        {chips([...new Set(evidence.map(item => item.field))].filter(name => !['extra_lots', 'batch_date', ...fields.flatMap(item => [...item.evidence])].includes(name)))}
+        {lots.length > 0 && <div className="field"><span>Listed lots</span><div className="row">{[...new Set(lots)].map(lot => <Chip key={lot}>{lot}</Chip>)}</div>{chips(['extra_lots'])}</div>}
+        {chips([...new Set(evidence.map(item => item.field))].filter(name => !(lots.length ? ['extra_lots'] : []).concat(fields.flatMap(item => [...item.evidence])).includes(name)))}
         <div className="row form-actions">
-          <Button type="submit" variant="secondary" icon="save" busy={busy} disabled={!dirty}>Save edits</Button>
-          <Button icon="arrow_forward" disabled={busy || dirty || !recall.catalog_match || !hasCompleteLots(recall)} onClick={onContinue}>Continue to review</Button>
+          <Button id="save-extraction" type="submit" variant={dirty ? 'primary' : 'secondary'} icon="save" busy={busy} disabled={!dirty}>Save edits</Button>
+          <Button id="continue-extraction" variant={blocked || dirty ? 'secondary' : 'primary'} icon="arrow_forward" disabled={busy || dirty || blocked} onClick={onContinue}>Continue to review</Button>
         </div>
       </form>
     </Card>

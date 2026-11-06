@@ -6,6 +6,7 @@ import { ServerWaking } from '../../pages/ServerWaking'
 import { Button } from '../ui/Button'
 import { Icon } from '../ui/Icon'
 import { Modal } from '../ui/Modal'
+import { Money } from '../ui/Money'
 
 export function ConfirmApproveDialog({ plan, onClose, onConfirm, busy, error, clearError }: {
   plan: Plan; onClose: () => void; onConfirm: () => void; busy?: boolean; error?: unknown; clearError?: () => void
@@ -16,13 +17,13 @@ export function ConfirmApproveDialog({ plan, onClose, onConfirm, busy, error, cl
   return (
     <Modal title="Approve sandbox refunds?" onClose={onClose} busy={busy}>
       <form onSubmit={event => { event.preventDefault(); if (checked && !busy) onConfirm() }}>
-        <p className="muted">You’re approving <strong className="amount">{total}</strong> in sandbox refunds. Review the amount for each eligible order.</p>
+        <p className="muted">This sends a sandbox refund for the affected items listed below. All other orders stay as they are.</p>
         <div className="receipt">
           <ul>{orders.map(order => <li key={order.order_id}>
             <span><strong>{order.customer_name}</strong><small>{order.order_id}</small></span>
-            <strong className="amount">{formatCents(order.refund_cents)}</strong>
+            <Money cents={order.refund_cents} tone="refund" />
           </li>)}</ul>
-          <div className="receipt-total"><span>Total refund</span><strong className="amount">{total}</strong></div>
+          <div className="receipt-total"><span>Total refund</span><Money cents={plan.total_refund_cents} tone="refund" /></div>
         </div>
         <label className="confirm-checkbox">
           <input type="checkbox" checked={checked} onChange={event => setChecked(event.target.checked)} disabled={busy} />
@@ -33,7 +34,7 @@ export function ConfirmApproveDialog({ plan, onClose, onConfirm, busy, error, cl
           : <p className="field-error mt-3" role="alert">{friendlyError(error)}</p>)}
         {busy && <p role="status" className="row muted mt-3 text-sm"><Icon name="sync" className="spin" />Talking to PayPal sandbox…</p>}
         <div className="modal-actions">
-          <Button variant="secondary" disabled={busy} onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" data-initial-focus disabled={busy} onClick={onClose}>Cancel</Button>
           <Button type="submit" icon="payments" busy={busy} disabled={!checked || isWaking(error)}>Approve and refund {total}</Button>
         </div>
       </form>

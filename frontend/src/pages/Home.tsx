@@ -5,14 +5,14 @@ import { Icon } from '../components/ui/Icon'
 
 const steps = [
   { icon: 'upload_file', title: 'Upload notice', detail: 'Paste a supplier notice, upload a text file, or use a sample.' },
-  { icon: 'auto_awesome', title: 'AI extracts SKU and lots', detail: 'Verify the extracted fields against quotes from the notice.' },
-  { icon: 'inventory_2', title: 'Review matched orders', detail: 'See confirmed, uncertain, and unaffected orders side by side.' },
+  { icon: 'auto_awesome', title: 'Check the product and lots', detail: 'AI shows the quotes it used from the notice.' },
+  { icon: 'inventory_2', title: 'Review the orders', detail: 'See what to refund and which orders need a closer look.' },
   { icon: 'payments', title: 'Approve and refund', detail: 'Confirm the exact total, then track the sandbox refund status.' },
 ]
 const trust = [
-  { icon: 'receipt_long', title: 'Exact partial refunds', detail: 'Refunds cover the affected lines in a captured order.', tone: 'confirmed' },
-  { icon: 'shield', title: 'Safe repeat approval', detail: 'Repeated approval returns the existing refund request.', tone: 'pending' },
-  { icon: 'manage_search', title: 'Human review for uncertain lots', detail: 'Orders with uncertain lots stay flagged for manual review.', tone: 'uncertain' },
+  { icon: 'receipt_long', title: 'Refund only affected items', detail: 'Keep the rest of the original order as it is.', tone: 'confirmed' },
+  { icon: 'shield', title: 'One refund per order for a recall', detail: 'Approving the same recall again returns the existing refund.', tone: 'pending' },
+  { icon: 'manage_search', title: 'Leave uncertain orders for review', detail: 'Missing or unclear lots stay out of automatic refunds.', tone: 'uncertain' },
 ]
 
 function RefundIllustration() {
@@ -21,7 +21,7 @@ function RefundIllustration() {
       <Card className="illustration-card">
         <div className="row between">
           <div className="card-title"><span className="icon-tile"><Icon name="receipt_long" /></span><div><p className="eyebrow">Refund preview</p><h2 className="heading-sm">Affected order</h2></div></div>
-          <Badge tone="pending">Example</Badge>
+          <Badge tone="pending" icon="info">Example</Badge>
         </div>
         <div className="illustration-body">
           <div className="illustration-line"><Icon name="inventory_2" /><span>Affected item</span><Badge tone="confirmed" icon="check_circle">Refunded</Badge></div>
@@ -40,12 +40,12 @@ export function Home() {
       <section className="home-hero">
         <div className="container-shell home-hero-grid">
           <div className="home-hero-copy">
-            <span className="home-kicker"><Icon name="shield" /> Supplier recall workflow</span>
+            <span className="home-kicker"><Icon name="shield" /> Product recalls for small retailers</span>
             <h1>Refund the right customers. The right amount.</h1>
-            <p>Turn a supplier’s recall notice into an evidence-backed refund plan. Check the affected lots, review the orders, and refund only the items covered by the recall.</p>
+            <p>Start with a supplier recall notice. See which orders are affected, then approve refunds for those items.</p>
             <div className="row">
-              <ButtonLink to="/" icon="arrow_forward">Start a recall</ButtonLink>
-              <ButtonLink to="/setup" variant="secondary" icon="inventory_2">View demo setup</ButtonLink>
+              <ButtonLink to="/setup" icon="arrow_forward">Start guided demo</ButtonLink>
+              <ButtonLink to="/" variant="secondary" icon="description">Upload a notice</ButtonLink>
             </div>
           </div>
           <RefundIllustration />
@@ -65,7 +65,7 @@ export function Home() {
       </section>
       <section className="container-shell home-trust">
         <p className="eyebrow">Built for small retailers</p>
-        <h2 className="heading-lg">Why merchants trust RecallRelay</h2>
+        <h2 className="heading-lg">Keep control of every refund</h2>
         <div className="home-trust-grid">
           {trust.map(({ icon, title, detail, tone }) => <Card key={title}>
             <span className={`icon-tile tone-${tone}`}><Icon name={icon} /></span>
@@ -75,7 +75,7 @@ export function Home() {
       </section>
       <section className="home-cta">
         <div className="container-shell"><div className="home-cta-panel">
-          <div><h2>Ready to test the sandbox recall flow?</h2><p>Prepare demo orders to see a partial refund, an unaffected order, and a lot that needs review.</p></div>
+          <div><h2>Try a recall with demo orders</h2><p>See one partial refund and two orders that stay untouched.</p></div>
           <ButtonLink to="/setup" variant="secondary" icon="arrow_forward">Open demo setup</ButtonLink>
         </div></div>
       </section>

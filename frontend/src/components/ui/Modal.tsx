@@ -11,17 +11,18 @@ export function Modal({ title, onClose, children, busy = false, drawer = false }
     const dialog = ref.current!
     const opener = document.activeElement as HTMLElement | null
     dialog.showModal()
+    dialog.querySelector<HTMLElement>('[data-initial-focus]')?.focus()
     const originalOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       dialog.close()
       document.body.style.overflow = originalOverflow
-      opener?.focus()
+      if (opener?.isConnected) opener.focus({ preventScroll: true })
     }
   }, [])
 
   return (
-    <dialog ref={ref} aria-labelledby={id} className={drawer ? 'modal drawer' : 'modal'}
+    <dialog ref={ref} aria-labelledby={id} aria-modal="true" className={drawer ? 'modal drawer' : 'modal'}
       onCancel={event => { event.preventDefault(); if (!busy) onClose() }}
       onKeyDown={event => {
         if (event.key !== 'Tab') return

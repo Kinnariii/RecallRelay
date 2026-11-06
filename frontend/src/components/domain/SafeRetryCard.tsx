@@ -35,13 +35,13 @@ export function SafeRetryCard({ approve, disabled }: { approve: () => Promise<Re
   }
 
   return (
-    <Card className="stack">
+    <Card className="stack repeat-approval">
       <div className="row between">
         <div className="card-title"><span className="icon-tile"><Icon name="shield" /></span><div>
-          <h2 className="heading-sm">Safe repeat approval</h2>
-          <p className="muted text-sm">Approving the same recall again returns its existing refund requests.</p>
+          <h2 className="heading-sm">See why it’s safe to approve again</h2>
+          <p className="muted text-sm">The same recall returns the original refund.</p>
         </div></div>
-        <Button variant="secondary" icon="replay" busy={busy} disabled={disabled} onClick={() => void repeat()}>Approve again</Button>
+        <Button id="approve-again" icon="replay" busy={busy} disabled={disabled} onClick={() => void repeat()}>Approve again</Button>
       </div>
       {error != null && <AsyncFailure error={error} onReady={() => setError(null)} />}
     </Card>

@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: 'recall.spec.ts',
+  testMatch: ['recall.spec.ts', 'ux.spec.ts'],
   outputDir: 'test-results/mock',
   use: {
     ...devices['Desktop Chrome'],
