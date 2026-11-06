@@ -38,7 +38,7 @@ VITE_API_URL=http://localhost:4000
 
 `VITE_USE_MOCK=false` selects the HTTP adapter. Change `VITE_API_URL` if the backend runs elsewhere. Vite reads these variables at startup and at build time. Put credentials in the backend environment only.
 
-The backend teammate should implement the [API contract](docs/API_CONTRACT.md). For sandbox integration, create an app under Apps and Credentials in the developer dashboard, then configure its sandbox client ID, secret, and buyer account on the backend. The backend handles the approval redirect and capture. The setup and sandbox environment variables are described in [the build specification](docs/SPEC.md).
+Start the backend using the [backend setup guide](backend/README.md). It implements the [API contract](docs/API_CONTRACT.md), including the sandbox buyer redirect, capture, and partial refund. Configure the sandbox app and AI model in the backend environment.
 
 To run the local HTTP contract stub, run `npm run stub` in a second terminal from `frontend/`. The stub starts on port 4000, seeds pre-captured orders, and serves scripted demo responses. It is for frontend integration checks.
 
