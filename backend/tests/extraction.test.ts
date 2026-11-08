@@ -62,15 +62,22 @@ it('rejects oversize or extra fields and keeps model failures safe', async () =>
 
 it('requests structured output using the configured model and validates the provider envelope', async () => {
   const reply = JSON.stringify(sampleExtractions[0])
-  const transport = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({
-    choices: [{ finish_reason: 'stop', message: { content: reply, refusal: null } }],
-  })).mockResolvedValueOnce(Response.json({ choices: [{ message: { content: reply }, finish_reason: 'length' }] }))
+  const geminiOk = Response.json({
+    candidates: [{ content: { parts: [{ text: reply }] }, finishReason: 'STOP' }],
+  })
+  const geminiMalformed = Response.json({
+    candidates: [{ content: { parts: [{ text: reply }] }, finishReason: 'SAFETY' }],
+  })
+  const transport = vi.fn<typeof fetch>()
+    .mockResolvedValueOnce(geminiOk)
+    .mockResolvedValueOnce(geminiMalformed)
   const model = createModel(config, transport)
   await expect(model('system', 'user')).resolves.toBe(reply)
   const [url, init] = transport.mock.calls[0]
-  expect(url).toBe('https://api.openai.com/v1/chat/completions')
+  expect(url).toContain('generativelanguage.googleapis.com')
+  expect(url).toContain(config.AI_MODEL)
   expect(JSON.parse(String(init?.body))).toMatchObject({
-    model: config.AI_MODEL, store: false, response_format: { type: 'json_schema', json_schema: { strict: true } },
+    generationConfig: { responseMimeType: 'application/json' },
   })
   await expect(model('system', 'user')).rejects.toThrow()
 })

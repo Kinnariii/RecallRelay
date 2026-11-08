@@ -14,7 +14,7 @@
     "paypal:smoke": "tsx scripts/paypal-smoke.ts"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.0",
+    "better-sqlite3": "^12.11.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
